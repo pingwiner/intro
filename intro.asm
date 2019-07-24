@@ -14,14 +14,14 @@ loop:
 
 
 drawSin:
-	ld a, 0 
+	ld l, 0 
 	ld c, 3				; Repeat wave 3 times
 	ld de, #400d		; Initial screen coordinate
 
 .draw0
 	ld h, high sprite
 	ld a, (drawSin + 1)
-	ld l, a
+	;ld l, a
 						; Draw 64 lines of sprite
 	ld b, 64
 .draw1
@@ -51,11 +51,21 @@ clear:					; Clear screen
     ld (hl), l          
     ldir
 
-    inc hl
-    inc de
-	ld bc, 767
-	ld (hl), #7
-	ldir
+    ld b, 48
+.cl0
+	push bc	
+	ld b, 16
+.cl1	    
+	ldi (hl), #38
+	djnz .cl1
+
+	ld b, 16
+.cl2	
+	ldi (hl), #7
+	djnz .cl2
+
+	pop bc
+	djnz .cl0
 	ret
 
 down:					; Move 1 line down
