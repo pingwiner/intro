@@ -10,34 +10,18 @@ loop:
 	ei
 	halt
 	call drawSin
-
-	; Here we increase phase of the sine wave
-
-	ld ix, offset
-	ld hl, (ix)
-	ld bc, 128
-	add hl, bc
-	ld (ix), hl
-
 	jr loop
 
 
 drawSin:
+	ld a, 0 
 	ld c, 3				; Repeat wave 3 times
 	ld de, #400d		; Initial screen coordinate
 
 .draw0
-						; Load phase
-	ld a, (offset + 1)
-	and a, 63
-	rlca
-	rlca
-	ld hl, sprite 
-	push bc
-	xor b
-	ld c, a
-	add hl, bc
-	pop bc
+	ld h, high sprite
+	ld a, (drawSin + 1)
+	ld l, a
 						; Draw 64 lines of sprite
 	ld b, 64
 .draw1
@@ -55,6 +39,9 @@ drawSin:
 	dec c
 	jr nz, .draw0
 
+	ld a, (drawSin + 1)
+	add a, 4
+	ld (drawSin + 1), a
 	ret
 
 clear:					; Clear screen
@@ -94,14 +81,8 @@ spritegen:				; We have only 1/4 of sine wave hardcoded, so here we expand it to
 	push bc
 	ld bc, #4
 	ldir
-	dec hl
-	dec hl
-	dec hl
-	dec hl
-	dec hl
-	dec hl
-	dec hl
-	dec hl
+	ld bc, 8
+	sub hl, bc
 	pop bc	
 	djnz .spg1
 
@@ -135,22 +116,16 @@ spritegen:				; We have only 1/4 of sine wave hardcoded, so here we expand it to
 	ret
 
 reverse:				; Reverse bits in A
-	push hl
-	push bc
-	ld b,8
-	ld l,a
+	ld d,8
+	ld e,a
 .rev1
- 	rl l
+ 	rl e
 	rra
-	djnz .rev1
-	pop bc
-	pop hl
+	dec d
+	jr nz, .rev1
 	ret
 
-offset:					; Phase counter
-	db 0
-	db 0
-
+	align #100
 sprite:					; Sine wave sprite
 	db #0, #0, #80, #0
 	db #0, #0, #80, #0
