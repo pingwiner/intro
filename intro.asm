@@ -4,6 +4,17 @@ SnaStart:
 	ld sp,#7fff
 
 	call clear
+someone:
+		ld a,%00111000
+		ld hl,#5800
+		ld c,48
+.l0		ld b,16
+.l1		ld (hl),a
+		inc hl
+		djnz .l1
+		xor %00111111
+		dec c
+		jr nz,.l0
 	call spritegen
 
 loop:
@@ -12,15 +23,14 @@ loop:
 	call drawSin
 	jr loop
 
-
 drawSin:
-	ld l, 0 
+	ld l, 0
 	ld c, 3				; Repeat wave 3 times
-	ld de, #400d		; Initial screen coordinate
+	ld de, #400e		; Initial screen coordinate
 
 .draw0
 	ld h, high sprite
-	ld a, (drawSin + 1)
+;	ld a, (drawSin + 1)
 	;ld l, a
 						; Draw 64 lines of sprite
 	ld b, 64
@@ -45,10 +55,10 @@ drawSin:
 	ret
 
 clear:					; Clear screen
-	ld hl, #4000         
-    ld de, #4001        
-    ld bc, 6143         
-    ld (hl), l          
+	ld hl, #4000
+    ld de, #4001
+    ld bc, 6143
+    ld (hl), l
     ldir
 
     ld b, 48
@@ -86,14 +96,14 @@ spritegen:				; We have only 1/4 of sine wave hardcoded, so here we expand it to
 	ld hl, sprite + 60
 	ld b, 16
 	ld de, sprite + 64
-	
+
 .spg1
 	push bc
 	ld bc, #4
 	ldir
 	ld bc, 8
 	sub hl, bc
-	pop bc	
+	pop bc
 	djnz .spg1
 
 	ld ix, sprite
@@ -153,7 +163,7 @@ sprite:					; Sine wave sprite
 	db #0, #0, #ff, #fc
 	db #0, #0, #ff, #fe
 	db #0, #0, #ff, #fe
-	
+
 	display $-SnaStart
 	savesna "intro.sna",SnaStart
 	savebin "intro.C",SnaStart,$-SnaStart
