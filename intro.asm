@@ -4,17 +4,6 @@ SnaStart:
 	ld sp,#7fff
 
 	call clear
-someone:
-		ld a,%00111000
-		ld hl,#5800
-		ld c,48
-.l0		ld b,16
-.l1		ld (hl),a
-		inc hl
-		djnz .l1
-		xor %00111111
-		dec c
-		jr nz,.l0
 	call spritegen
 
 loop:
@@ -61,21 +50,17 @@ clear:					; Clear screen
     ld (hl), l
     ldir
 
-    ld b, 48
-.cl0
-	push bc	
-	ld b, 16
-.cl1	    
-	ldi (hl), #38
-	djnz .cl1
-
-	ld b, 16
-.cl2	
-	ldi (hl), #7
-	djnz .cl2
-
-	pop bc
-	djnz .cl0
+someone:
+	ld a,%00111000
+	ld hl,#5800
+	ld c,48
+.l0	ld b,16
+.l1	ld (hl),a
+	inc hl
+	djnz .l1
+	xor %00111111
+	dec c
+	jr nz,.l0
 	ret
 
 down:					; Move 1 line down
