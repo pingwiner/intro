@@ -24,17 +24,13 @@ loop:
 	jr loop
 
 drawSin:
-<<<<<<< HEAD
-	ld a, 0
-=======
-	ld l, 0 
->>>>>>> d6eeb9adfdee04ef544ea309abedb4c15942e943
+	ld l, 0
 	ld c, 3				; Repeat wave 3 times
 	ld de, #400e		; Initial screen coordinate
 
 .draw0
 	ld h, high sprite
-	ld a, (drawSin + 1)
+;	ld a, (drawSin + 1)
 	;ld l, a
 						; Draw 64 lines of sprite
 	ld b, 64
