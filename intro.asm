@@ -19,18 +19,18 @@ drawSin:
 
 .draw0
 	ld h, high sprite
-;	ld a, (drawSin + 1)
-	;ld l, a
 						; Draw 64 lines of sprite
 	ld b, 64
 .draw1
 	push bc
-	ld bc, 4
-	ldir
-	dec de
-	dec de
-	dec de
-	dec de
+	ldi
+	ldi
+	ldi
+	ldi
+	dec e
+	dec e
+	dec e
+	dec e
 	call down
 	pop bc
 	djnz .draw1
@@ -91,43 +91,25 @@ spritegen:				; We have only 1/4 of sine wave hardcoded, so here we expand it to
 	pop bc
 	djnz .spg1
 
-	ld ix, sprite
-	ld iy, sprite + 128
-	ld b, 32
+	ld de,sprite+127
+	ld hl,sprite+128
+	ld c,128
 .spg2
-	ld a, (ix + 2)
-	call reverse
-	ld (iy +1), a
-	ld a, (ix + 3)
-	call reverse
-	ld (iy), a
-	xor a
-	ld (iy + 2), a
-	ld (iy + 3), a
-	inc ix
-	inc ix
-	inc ix
-	inc ix
-	inc iy
-	inc iy
-	inc iy
-	inc iy
-	djnz .spg2
+	ld a,(de)
+	ld b,8
+.spg3
+	rrca
+	rl (hl)
+	djnz .spg3
+	dec de
+	inc hl
+	dec c
+	jr nz,.spg2
 
 	ld hl, sprite
 	ld de, sprite + 256
 	ld bc, 256
 	ldir
-	ret
-
-reverse:				; Reverse bits in A
-	ld d,8
-	ld e,a
-.rev1
- 	rl e
-	rra
-	dec d
-	jr nz, .rev1
 	ret
 
 	align #100
