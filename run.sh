@@ -1,1 +1,1 @@
-wine ~/sjasmplus/sjasmplus.exe intro.asm && xpeccy intro.sna  
+sjasmplus intro.asm && xpeccy intro.sna -d  
