@@ -1,10 +1,31 @@
 	device zxspectrum128
 
+	MACRO GET_CURRENT_FRAME_NUMBER
+		ld a, (ix + 3)
+	ENDM
+
+	MACRO SET_CURRENT_FRAME_NUMBER
+		ld (ix + 3), a 
+	ENDM
+
+	MACRO GET_CURRENT_LINE_NUMBER
+		ld a, (ix)
+	ENDM
+
+	MACRO SET_CURRENT_LINE_NUMBER
+		ld (ix), a
+	ENDM
+
+
+screen EQU #4000
+attributes EQU #5800
+
 	org #7000
 SnaStart:
 	ld sp,#feff
 
 	call clear_screen
+	ld ix, vars
 
 loop:
 	ei
@@ -13,8 +34,8 @@ loop:
 	jr loop
 
 draw:
-	call get_current_frame_number
-	cp 0
+	GET_CURRENT_FRAME_NUMBER
+	or a
 	jp nz, .d0
 	call draw_first_screen
 	jr .d1
@@ -24,87 +45,82 @@ draw:
 	call inc_current_frame_number
 	ret
 
-; iy, a
-get_current_frame_number:
-	ld iy, frame
-	ld a, (iy)
-	ret
 
-; iy, a
+; a
 inc_current_frame_number:
-	call get_current_frame_number
+	GET_CURRENT_FRAME_NUMBER
 	inc a
 	cp 20
 	jp nz, .icfn0
-	ld a, 0
-.icfn0
-	ld (iy), a
-	ret
+	xor a
 
-; ix, a
-get_current_line_number:
-	ld ix, line
-	ld a, (ix)
+.icfn0
+	SET_CURRENT_FRAME_NUMBER
 	ret
 
 ; ix, a
 inc_current_line_number:
-	call get_current_line_number
+	GET_CURRENT_LINE_NUMBER
 	inc a
-	cp 128
-	jp nz, .icln0
-	ld a, 0
-.icln0
-    ld (ix), a
+	and %01111111
+    SET_CURRENT_LINE_NUMBER
     ret
 
-; ix, a, c, d, e
+; a, d, e
 ; returns line address in DE
 get_current_line_address:
-	call get_current_line_number
-	add 32 ;offset from top
-	ld c, a
+	GET_CURRENT_LINE_NUMBER
+
+	add (ix + 1) 		;offset from top
 	and 7
-    ld d, a 
-    ld a, c 
-    and #38        
+	ld d, a 
+	GET_CURRENT_LINE_NUMBER
+	add (ix + 1)
+	and #38        
 	rla
 	rla
+	add (ix + 2)       ;offset from left  
 	ld e, a
-	ld a, c
+	GET_CURRENT_LINE_NUMBER
+	add (ix + 1)
 	and #c0
 	rra 
 	rra 
-    rra 
-    or d
-    or #40
-    ld d, a 
-    ret
+	rra 
+	or d
+	or #40
+	ld d, a 
+	ret
 
 
 ; hl, de, bc, a
 clear_screen:	
-	ld hl, #4000
-    ld de, #4001
-    ld bc, 6143
-    ld (hl), l
-    ldir
+	ld hl, screen
+	ld de, screen + 1
+	ld bc, 6143
+	ld (hl), l
+	ldir
 
-	ld hl, #5800
-	ld de, #5801
+	ld hl, attributes
+	ld de, attributes + 1
 	ld bc, 767
 	ld a, %01000111
 	ld (hl), a
 	ldir
+
+	in a, #fe
+	and %11111000
+	;out #fe, a
+
 	ret
 
-; iy, a, hl, de
+; a, hl, de
 ; returns frame address in HL
 get_current_frame_address:
-	call get_current_frame_number
+	GET_CURRENT_FRAME_NUMBER
 	dec a
 	add a 
-	ld l,a
+	ld l, a
 	ld h, high frames
 	ld e, (hl)
 	inc l
@@ -117,14 +133,11 @@ draw_first_screen:
 	ld hl, image
 .dfs0		
 	call get_current_line_address
-	ld a, e
-	add 8       ;left offset
-	ld e, a
 
 	ld bc, 16
 	ldir
 	call inc_current_line_number
-	cp 0
+	or a
 	jp nz, .dfs0
 	ret
 
@@ -136,7 +149,7 @@ lp:
 	jp z, .dd1
 	and a, 15
 	inc a
-	ld b, a ;b = length
+	ld c, a      ;c = length
 
 	call get_current_line_address
 	        
@@ -147,17 +160,15 @@ lp:
 	srl a        ;a = offset
 
 	add a, e
-	add a, 8
 	ld e, a
 
 	inc hl
-	ld c, b
 	ld b, 0
 	ldir
 
 .dd0
 	call inc_current_line_number
-	cp 0
+	or a
 	jp nz, lp
 	ret
 
@@ -165,7 +176,30 @@ lp:
 	inc hl
 	jr .dd0
 
+get_line_address:
+	ld a, c
+	and 7
+	ld d, a 
+	ld a, c 
+	and #38        
+	rla
+	rla  
+	ld e, a
+	ld a, c
+	and #c0
+	rra 
+	rra 
+	rra 
+	or d
+	or #40
+	ld d, a 
+	ret
+
+
+vars:
 line db 0
+top_margin db 32
+left_margin db 8
 frame db 0
 
 	org #7200 
